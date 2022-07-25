@@ -6,14 +6,16 @@ module.exports = {
   },
 
   getSignList: (params) => {
-    return `SELECT * FROM surat_keluar_temp WHERE users_sign=${params.sign_id}`;
+    const sql = `SELECT * FROM document_sign WHERE eksekutor=${params.sign_id} AND atribut=${params.atribut}`;
+    console.log(sql);
+    return sql;
   },
 
   addSuratKeluar: (params) => {
-    const sql = `INSERT INTO surat_keluar_temp (filename, sign_type, field_annotation, users_sign, status, judul, perihal) VALUES 
+    const sql = `INSERT INTO document_sign(filename, atribut, annotation_field, eksekutor, level_eksekusi, status, judul, perihal, status_level) VALUES 
       ${params.annot.map(
         (value) =>
-          `('${params.fileName}', '${value.type}', '${value.annotationField}', '${value.userSignature}', 0, '${params.judul}', '${params.perihal}')`
+          `('${params.fileName}', '${value.type}', '${value.annotationField}', '${value.userSignature}', ${value.level}, 'Dikirimkan Ke Pemaraf Level 1', '${params.judul}', '${params.perihal}', 1)`
       )}`;
     return sql;
   },

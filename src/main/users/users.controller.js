@@ -8,15 +8,19 @@ const cryptoJS = require("crypto-js");
 
 Controller.post("/auth/login", async (request, response) => {
   console.log(
-    `SELECT * FROM users WHERE nip = '${
-      request.body.nip
-    }' AND password='${cryptoJS.SHA256(request.body.password).toString()}'`
+    `SELECT users.*, role.role_name, role.id as role_id, role.disposision_level FROM users 
+     LEFT JOIN role ON role.id = users.jabatan
+     WHERE nip = '${request.body.nip}' AND password='${cryptoJS
+      .SHA256(request.body.password)
+      .toString()}'`
   );
   const result = await database
     .execute(
-      `SELECT * FROM users WHERE nip = '${
-        request.body.nip
-      }' AND password='${cryptoJS.SHA256(request.body.password).toString()}'`
+      `SELECT users.*, role.role_name, role.id as role_id, role.disposision_level FROM users 
+     LEFT JOIN role ON role.id = users.jabatan 
+     WHERE nip = '${request.body.nip}' AND password='${cryptoJS
+        .SHA256(request.body.password)
+        .toString()}'`
     )
     .then((response) => response)
     .catch((error) => error);
@@ -25,8 +29,39 @@ Controller.post("/auth/login", async (request, response) => {
 });
 
 Controller.get("/list", async (request, response) => {
+  let sql = "";
+  if (request.query.atribut) {
+    sql = `SELECT users.*, role.role_name, role.id as role_id, disposision_level FROM users 
+    LEFT JOIN role ON role.id = users.jabatan
+    WHERE users.atribut = '${request.query.atribut}'
+    ORDER BY id DESC`;
+  } else {
+    sql = `SELECT users.*, role.role_name, role.id as role_id, disposision_level FROM users 
+    LEFT JOIN role ON role.id = users.jabatan
+    ORDER BY id DESC`;
+  }
   const result = await database
-    .execute(`SELECT id, nama, jabatan, nip, role FROM users ORDER BY id DESC`)
+    .execute(sql)
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.get("/jabatan/list", async (request, response) => {
+  const result = await database
+    .execute(`SELECT * FROM role ORDER BY disposision_level DESC`)
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.get("/jabatan", async (request, response) => {
+  const result = await database
+    .execute(
+      `SELECT * FROM role WHERE role_name not in('operator', 'admin') ORDER BY disposision_level DESC`
+    )
     .then((response) => response)
     .catch((error) => error);
 
@@ -37,12 +72,35 @@ Controller.post("/create", async (request, response) => {
   console.log(request.body);
   const result = await database
     .execute(
-      `INSERT INTO users (password, nama, jabatan, nip, role) 
+      `INSERT INTO users (password, nama, jabatan, nip, role, atribut) 
       VALUES('${cryptoJS.SHA256(request.body.password).toString()}', '${
         request.body.nama
-      }', '${request.body.jabatan.value}', '${request.body.nip}', '${
+      }', '${request.body.jabatan.id}', '${request.body.nip}', '${
         request.body.role.value
-      }')`
+      }', ${
+        request.body.atribut !== null
+          ? `'${request.body.atribut.atribut}'`
+          : null
+      })`
+    )
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.post("/update", async (request, response) => {
+  const result = await database
+    .execute(
+      `update users set nama='${request.body.nama}', 
+      jabatan=${request.body.jabatan.id}, 
+      role='${request.body.role.value}',
+      atribut=${
+        request.body.atribut !== null
+          ? `'${request.body.atribut.atribut}'`
+          : null
+      }
+      WHERE nip='${request.body.nip}'`
     )
     .then((response) => response)
     .catch((error) => error);
