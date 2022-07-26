@@ -108,4 +108,45 @@ Controller.post("/update", async (request, response) => {
   response.json(result);
 });
 
+Controller.get("/roles", async (request, response) => {
+  const result = await database
+    .execute(`SELECT * FROM role ORDER BY id DESC`)
+    .then((response) => response)
+    .catch((error) => error);
+  response.json(result);
+});
+
+Controller.patch("/roles", async (request, response) => {
+  const result = await database
+    .execute(
+      `UPDATE role SET role_name='${request.body.roleName}', 
+  disposision_level=${request.body.disposisionLevel} WHERE id=${request.body.roleId}`
+    )
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.post("/roles", async (request, response) => {
+  const result = await database
+    .execute(
+      `INSERT INTO role (role_name, disposision_level)
+  VALUES('${request.body.roleName}', ${request.body.disposisionLevel})`
+    )
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.post("/roles/delete", async (request, response) => {
+  const result = await database
+    .execute(`DELETE FROM role WHERE id = ${request.body.roleId}`)
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
 module.exports = Controller;
