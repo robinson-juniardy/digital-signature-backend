@@ -73,14 +73,11 @@ Controller.post("/create", async (request, response) => {
   const result = await database
     .execute(
       `INSERT INTO users (password, nama, jabatan, nip, role, atribut, paraf, tandatangan) 
-      VALUES('${cryptoJS.SHA256(request.body.password).toString()}', '${
-        request.body.nama
-      }', '${request.body.jabatan.id}', '${request.body.nip}', '${
-        request.body.role.value
-      }', ${
-        request.body.atribut !== null
-          ? `'${request.body.atribut.atribut}'`
-          : null
+      VALUES('${cryptoJS.SHA256(request.body.password).toString()}', '${request.body.nama
+      }', '${request.body.jabatan.id}', '${request.body.nip}', '${request.body.role.value
+      }', ${request.body.atribut !== null
+        ? `'${request.body.atribut.atribut}'`
+        : null
       }, ${request.body.pemaraf === true ? 1 : 0}, 
       ${request.body.penandatangan === true ? 1 : 0}
       )`
@@ -97,10 +94,9 @@ Controller.post("/update", async (request, response) => {
       `update users set nama='${request.body.nama}', 
       jabatan=${request.body.jabatan.id}, 
       role='${request.body.role.value}',
-      atribut=${
-        request.body.atribut !== null
-          ? `'${request.body.atribut.atribut}'`
-          : null
+      atribut=${request.body.atribut !== null
+        ? `'${request.body.atribut.atribut}'`
+        : null
       },
       paraf=${request.body.pemaraf === true ? 1 : 0},
       tandatangan=${request.body.penandatangan === true ? 1 : 0}
@@ -133,15 +129,174 @@ Controller.patch("/roles", async (request, response) => {
 });
 
 Controller.post("/roles", async (request, response) => {
-  const result = await database
-    .execute(
-      `INSERT INTO role (role_name, disposision_level)
-  VALUES('${request.body.roleName}', ${request.body.disposisionLevel})`
-    )
-    .then((response) => response)
-    .catch((error) => error);
+  const roleName = request.body.roleName;
+  const disposisionLevel = request.body.disposisionLevel;
 
-  response.json(result);
+  var errorList = [];
+
+  if (!roleName) {
+    errorList.push("Role name required");
+  }
+
+  if (!disposisionLevel) {
+    errorList.push("Disposision level required");
+  } else {
+    if (disposisionLevel < 0) {
+      errorList.push("Disposision level must be more than 1");
+    }
+  }
+
+  if (errorList.length > 0) {
+    return response.json({
+      status: 0,
+      message: errorList.join(", ")
+    });
+  } else {
+    const queryGetRolesExist = `SELECT * FROM role WHERE role_name = '${roleName}' OR disposision_level = ${disposisionLevel}`;
+
+    await database.execute(queryGetRolesExist).then(async (resultGetRolesExist) => {
+      if (resultGetRolesExist.data.length > 0) {
+        return response.json({
+          status: 0,
+          message: `Data dengan role name = ${roleName} atau disposision level = ${disposisionLevel} sudah ada !`
+        });
+      } else {
+        const result = await database
+          .execute(
+            `INSERT INTO role (role_name, disposision_level) VALUES('${request.body.roleName}', ${request.body.disposisionLevel})`
+          )
+          .then((response) => response)
+          .catch((error) => error);
+
+        return response.json(result);
+      }
+    }).catch(errorGetRolesExist => {
+      return response.json({
+        status: 0,
+        message: "Get Roles Exist Failed",
+        error: errorGetRolesExist,
+        error2: errorGetRolesExist.stack
+      });
+    });
+  }
+});
+
+Controller.put("/roles", async (request, response) => {
+  const idRoles = request.body.id;
+  const roleName = request.body.role_name;
+  const disposisionLevel = request.body.disposision_level;
+
+  var errorList = [];
+
+  if (!idRoles) {
+    errorList.push("ID Role Required");
+  }
+
+  if (!roleName) {
+    errorList.push("Role name required");
+  }
+
+  if (!disposisionLevel) {
+    errorList.push("Disposision level required");
+  } else {
+    if (disposisionLevel < 0) {
+      errorList.push("Disposision level must be more than 1");
+    }
+  }
+
+  if (errorList.length > 0) {
+    return response.json({
+      status: 0,
+      message: errorList.join(", ")
+    });
+  } else {
+    const queryGetRolesExist = `SELECT * FROM role WHERE id = '${idRoles}'`;
+
+    await database.execute(queryGetRolesExist).then(async (resultGetRolesExist) => {
+      if (resultGetRolesExist.data.length > 0) {
+        const queryGetRolesExist2 = `SELECT * FROM role WHERE id != ${idRoles} AND (role_name = '${roleName}' OR disposision_level = ${disposisionLevel})`;
+
+        await database.execute(queryGetRolesExist2).then(async (resultGetRolesExist2) => {
+          if (resultGetRolesExist2.data.length > 0) {
+            return response.json({
+              status: 0,
+              message: `Data dengan role name = ${roleName} atau disposision level = ${disposisionLevel} sudah ada !`
+            });
+          } else {
+            const queryUpdateRole = `UPDATE role SET role_name = '${roleName}', disposision_level = ${disposisionLevel} WHERE id = ${idRoles}`;
+            const result = await database
+              .execute(queryUpdateRole)
+              .then((response) => response)
+              .catch((error) => error);
+
+            return response.json(result);
+          }
+        }).catch(errorGetRolesExist => {
+          return response.json({
+            status: 0,
+            message: "Get Roles Exist 2 Failed",
+            error: errorGetRolesExist,
+            error2: errorGetRolesExist.stack
+          });
+        });
+      } else {
+        return response.json({
+          status: 0,
+          message: "Data tidak ditemukan"
+        });
+      }
+    }).catch(errorGetRolesExist => {
+      return response.json({
+        status: 0,
+        message: "Get Roles Exist Failed",
+        error: errorGetRolesExist,
+        error2: errorGetRolesExist.stack
+      });
+    });
+  }
+});
+
+Controller.delete("/roles", async (request, response) => {
+  const idRoles = request.body.id_roles;
+
+  var errorList = [];
+
+  if (!idRoles) {
+    errorList.push("ID Role Required");
+  }
+
+  if (errorList.length > 0) {
+    return response.json({
+      status: 0,
+      message: errorList.join(", ")
+    });
+  } else {
+    const queryGetRolesExist = `SELECT * FROM role WHERE id = '${idRoles}'`;
+
+    await database.execute(queryGetRolesExist).then(async (resultGetRolesExist) => {
+      if (resultGetRolesExist.data.length > 0) {
+        const queryDeleteRole = `DELETE FROM role WHERE id = ${idRoles}`;
+        const result = await database
+          .execute(queryDeleteRole)
+          .then((response) => response)
+          .catch((error) => error);
+
+        return response.json(result);
+      } else {
+        return response.json({
+          status: 0,
+          message: "Data tidak ditemukan"
+        });
+      }
+    }).catch(errorGetRolesExist => {
+      return response.json({
+        status: 0,
+        message: "Get Roles Exist Failed",
+        error: errorGetRolesExist,
+        error2: errorGetRolesExist.stack
+      });
+    });
+  }
 });
 
 Controller.post("/roles/delete", async (request, response) => {
