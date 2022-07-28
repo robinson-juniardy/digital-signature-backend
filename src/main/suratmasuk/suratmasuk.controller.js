@@ -262,6 +262,23 @@ Controller.get("/arsip/:user_id", async (request, response) => {
     SELECT sm.*, arsip.created_time as tanggal_arsip FROM arsip_surat as arsip
     INNER JOIN surat_masuk sm on sm.id = arsip.id_surat
     WHERE arsip.created_by = '${request.params.user_id}'
+    ORDER BY arsip.id DESC
+  `
+    )
+    .then((response) => response)
+    .catch((error) => error);
+
+  response.json(result);
+});
+
+Controller.get("/arsip", async (request, response) => {
+  const result = await database
+    .execute(
+      `
+    SELECT sm.*, users.nama AS diarsipkan_oleh, arsip.created_time as tanggal_arsip FROM arsip_surat as arsip
+    INNER JOIN surat_masuk sm on sm.id = arsip.id_surat
+    LEFT JOIN users ON users.nip = arsip.created_by
+    ORDER BY arsip.id DESC
   `
     )
     .then((response) => response)

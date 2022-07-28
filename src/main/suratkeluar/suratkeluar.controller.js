@@ -13,6 +13,16 @@ Controller.get("/", async (request, response) => {
   response.json(result);
 });
 
+Controller.get("/stamp-document", async (request, response) => {
+  const result = await database
+    .execute(
+      `SELECT (SELECT nip from users WHERE users.id = document_sign.eksekutor) AS nip_eksekutor FROM document_sign WHERE filename='${request.query.filename}'`
+    )
+    .then((response) => response)
+    .catch((error) => error);
+  response.json(result);
+});
+
 Controller.get("/temp-byid/:id", async (request, response) => {
   const result1 = await database
     .execute(
@@ -36,7 +46,12 @@ Controller.get("/temp-byid/:id", async (request, response) => {
       users.nama AS nama_eksekutor,
       users.jabatan AS jabatan,
       users.nip AS nip,
-      CASE WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' WHEN sign.status_level < sign.level_eksekusi THEN 'Menunggu Paraf' WHEN sign.status_level = 5 THEN 'Di Kembalikan'
+      CASE 
+      WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' 
+      WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' 
+      WHEN sign.status_level < sign.level_eksekusi THEN 'Menunggu Paraf' 
+      WHEN sign.status = 4 THEN 'Selesai'
+      WHEN sign.status_level = 5 THEN 'Di Kembalikan'
       END AS eksekusi
       FROM document_sign sign
       LEFT JOIN users ON users.id = sign.eksekutor
@@ -75,7 +90,12 @@ Controller.get("/temp-byid/:id", async (request, response) => {
         users.nama AS nama_eksekutor,
         users.jabatan AS jabatan,
         users.nip AS nip,
-        CASE WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' WHEN sign.status_level < sign.level_eksekusi THEN 'Menunggu Paraf' WHEN sign.status_level = 5 THEN 'Di Kembalikan'
+        CASE 
+        WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' 
+        WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' 
+        WHEN sign.status_level < sign.level_eksekusi THEN 'Menunggu Paraf' 
+        WHEN sign.status_level = 5 THEN 'Di Kembalikan'
+        WHEN sign.status = 4 THEN 'Selesai'
         END AS eksekusi
         FROM document_sign sign
         LEFT JOIN users ON users.id = sign.eksekutor
