@@ -72,7 +72,7 @@ Controller.post("/create", async (request, response) => {
   console.log(request.body);
   const result = await database
     .execute(
-      `INSERT INTO users (password, nama, jabatan, nip, role, atribut) 
+      `INSERT INTO users (password, nama, jabatan, nip, role, atribut, paraf, tandatangan) 
       VALUES('${cryptoJS.SHA256(request.body.password).toString()}', '${
         request.body.nama
       }', '${request.body.jabatan.id}', '${request.body.nip}', '${
@@ -81,7 +81,9 @@ Controller.post("/create", async (request, response) => {
         request.body.atribut !== null
           ? `'${request.body.atribut.atribut}'`
           : null
-      })`
+      }, ${request.body.pemaraf === true ? 1 : 0}, 
+      ${request.body.penandatangan === true ? 1 : 0}
+      )`
     )
     .then((response) => response)
     .catch((error) => error);
@@ -99,7 +101,9 @@ Controller.post("/update", async (request, response) => {
         request.body.atribut !== null
           ? `'${request.body.atribut.atribut}'`
           : null
-      }
+      },
+      paraf=${request.body.pemaraf === true ? 1 : 0},
+      tandatangan=${request.body.penandatangan === true ? 1 : 0}
       WHERE nip='${request.body.nip}'`
     )
     .then((response) => response)
@@ -148,5 +152,7 @@ Controller.post("/roles/delete", async (request, response) => {
 
   response.json(result);
 });
+
+Controller.post("/");
 
 module.exports = Controller;
