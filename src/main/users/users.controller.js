@@ -74,7 +74,7 @@ Controller.post("/create", async (request, response) => {
     .execute(
       `INSERT INTO users (password, nama, jabatan, nip, role, atribut, paraf, tandatangan) 
       VALUES('${cryptoJS.SHA256(request.body.password).toString()}', '${request.body.nama
-      }', '${request.body.jabatan.id}', '${request.body.nip}', '${request.body.role.value
+      }', '${request.body.jabatan}', '${request.body.nip}', '${request.body.role.value
       }', ${request.body.atribut !== null
         ? `'${request.body.atribut.atribut}'`
         : null
@@ -92,7 +92,7 @@ Controller.post("/update", async (request, response) => {
   const result = await database
     .execute(
       `update users set nama='${request.body.nama}', 
-      jabatan=${request.body.jabatan.id}, 
+      jabatan='${request.body.jabatan}', 
       role='${request.body.role.value}',
       atribut=${request.body.atribut !== null
         ? `'${request.body.atribut.atribut}'`
@@ -306,6 +306,15 @@ Controller.post("/roles/delete", async (request, response) => {
     .catch((error) => error);
 
   response.json(result);
+});
+
+Controller.delete("/delete", async (req, res) => {
+  const result = await database
+    .execute(`DELETE FROM users WHERE id = ${req.body.id}`)
+    .then((res) => res)
+    .catch((error) => error);
+
+  res.json(result);
 });
 
 Controller.post("/");
