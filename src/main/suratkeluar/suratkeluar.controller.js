@@ -280,7 +280,9 @@ Controller.get("/status-sign-dokumen", async (request, response) => {
       users.nama AS nama_eksekutor,
       users.jabatan AS jabatan,
       users.nip AS nip,
-      CASE WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' WHEN sign.status_level < sign.level_eksekusi THEN 'Menunggu Paraf' WHEN sign.status_level = 5 THEN 'Di Kembalikan'
+      CASE WHEN sign.status_level > sign.level_eksekusi AND sign.status_level <= 3 THEN 'Selesai' 
+      WHEN sign.status_level = sign.level_eksekusi THEN 'Di Proses' WHEN sign.status_level < sign.level_eksekusi 
+      THEN 'Menunggu Paraf' WHEN sign.status_level = 5 THEN 'Di Kembalikan'
       END AS eksekusi
       FROM document_sign sign
       LEFT JOIN users ON users.id = sign.eksekutor
